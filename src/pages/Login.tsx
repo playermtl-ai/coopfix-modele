@@ -150,6 +150,7 @@ export default function Login() {
       email: email.trim(),
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/login`,
         data: {
           full_name: fullName.trim(),
           phone: phone.trim() || null,

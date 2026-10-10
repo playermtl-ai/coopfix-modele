@@ -21,6 +21,16 @@ Décompressez le ZIP et ouvrez le dossier du projet dans Dyad ou dans votre envi
 
 ## 2. Créer la base d'une nouvelle coop
 
+### Installation automatique sur Vercel
+
+Dans Vercel → Marketplace → Supabase → Install, choisissez **Link Existing Supabase Account**, votre équipe et uniquement votre projet CoopFix. Reliez votre projet Supabase vide. L’intégration fournit les variables de connexion sans les copier dans le code.
+
+Relancez ensuite une publication **Production** dans Deployments → Redeploy. Le script `scripts/build.mjs` installe toutes les migrations SQL dans une transaction avant de construire le site. Les publications suivantes conservent les données et ignorent les migrations déjà appliquées. Les previews n’appliquent aucune migration. Une base contenant déjà des tables sans historique CoopFix est refusée pour protéger ses données.
+
+Une fois la publication réussie, créez votre premier compte sur votre site. Il devient administrateur. Dans Supabase → Authentication → URL Configuration, utilisez l’adresse HTTPS de votre site comme Site URL et autorisez son URL de retour `/login` pour la confirmation par courriel.
+
+### Installation manuelle pour les autres hébergeurs
+
 Dans Supabase, ouvrez SQL Editor :
 1. Exécutez `supabase/migrations/001_fresh_install.sql`.
 2. Exécutez ensuite `supabase/migrations/002_configuration.sql`.

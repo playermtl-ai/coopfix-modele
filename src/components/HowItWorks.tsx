@@ -13,9 +13,9 @@ const steps = [
 ];
 
 // Set this only after verifying that the template is accessible to new coops.
-const templateRepository = import.meta.env.VITE_COOPFIX_TEMPLATE_REPOSITORY?.trim();
+const templateRepository = import.meta.env.VITE_COOPFIX_TEMPLATE_REPOSITORY?.trim() || 'https://github.com/playermtl-ai/coopfix-modele';
 const deployUrl = templateRepository
-  ? `https://vercel.com/new/clone?${new URLSearchParams({ "repository-url": templateRepository, env: "VITE_SUPABASE_URL,VITE_SUPABASE_PUBLISHABLE_KEY", "project-name": "coopfix-ma-coop", "repository-name": "coopfix-ma-coop" })}`
+  ? `https://vercel.com/new/clone?${new URLSearchParams({ "repository-url": templateRepository, "project-name": "coopfix-ma-coop", "repository-name": "coopfix-ma-coop" })}`
   : null;
 
 export function HowItWorks() {
@@ -28,7 +28,7 @@ export function HowItWorks() {
         <p className="text-sm text-muted-foreground">Chaque coop crée son propre site et conserve ses données dans sa propre base.</p>
         <ol className="list-decimal space-y-2 pl-5 text-sm">
           <li>Choisissez votre hébergement : Vercel, ou l'hébergement de votre coop s'il permet d'installer CoopFix.</li>
-          <li>Avec la personne responsable de l'installation, préparez la base de votre coop et installez le modèle CoopFix.</li>
+          <li>Installez le modèle CoopFix. Dans Vercel, reliez votre base avec l’intégration Supabase, puis relancez la publication de production : les tables s’installent automatiquement.</li>
           <li>Choisissez votre adresse : celle fournie par l'hébergeur, ou votre propre domaine, par exemple reparations.macoop.ca. Sur Vercel, vous pouvez aussi utiliser l'adresse fournie en .vercel.app.</li>
           <li>Copiez cette adresse, sans /login, dans Paramètres → Adresse publique de l'application. Configurez ensuite le nom de votre coop et ses immeubles.</li>
         </ol>
