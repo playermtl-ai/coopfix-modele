@@ -1,0 +1,8 @@
+.env*
+/tests/
+*.md
+GUIDE-SIMPLE.html
+node_modules/
+dist/
+/installation-template/
+/test-installation/
