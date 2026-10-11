@@ -31,7 +31,7 @@ function initials(name: string) {
 
 export default function Profile() {
   const { profile, refreshProfile } = useAuth();
-  const { data: addresses = [] } = useAddresses();
+  const { data: addresses = [], isPending: addressesLoading, isError: addressesError } = useAddresses();
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -48,6 +48,8 @@ export default function Profile() {
   }, [profile]);
 
   if (!profile) return <PageLoader label="Chargement du profil…" />;
+  const memberAddress = addresses.find(address => address.id === profile.address_id);
+  const selectedAddress = addresses.find(address => address.id === addressId);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,14 +132,32 @@ export default function Profile() {
           </div>
         </div>
 
-        {addresses.length > 0 ? (
+        {profile.role !== "admin" ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1.6fr_1fr]">
+            <div className="space-y-1.5">
+              <p id="profile-address-label" className="text-sm font-bold">Mon adresse</p>
+              <p aria-labelledby="profile-address-label" className="flex min-h-12 items-center gap-3 rounded-xl border border-input bg-background px-4 py-3 text-base">
+                <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span>{addressesLoading ? "Chargement de l’adresse…" : addressesError ? "Impossible de charger l’adresse. Réessayez en actualisant la page." : memberAddress?.name ?? "Aucune adresse associée à votre profil"}</span>
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <p id="profile-unit-label" className="text-sm font-bold">Logement</p>
+              <p aria-labelledby="profile-unit-label" className="flex min-h-12 items-center rounded-xl border border-input bg-background px-4 py-3 text-base">{profile.unit || "Sans numéro de logement"}</p>
+            </div>
+          </div>
+        ) : addressesLoading ? (
+          <p role="status" className="text-sm text-muted-foreground">Chargement des adresses…</p>
+        ) : addressesError ? (
+          <p role="alert" className="text-sm text-destructive">Impossible de charger les adresses. Actualisez la page avant de modifier votre profil.</p>
+        ) : addresses.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1.6fr_1fr]">
             <div className="space-y-1.5">
               <Label className="font-bold">Mon adresse</Label>
               <Select value={addressId} onValueChange={value => { setAddressId(value); setUnit(""); }} disabled={profile.role !== "admin"}>
                 <SelectTrigger className="h-12 w-full rounded-xl text-base">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="Choisir mon adresse" />
+                  <SelectValue placeholder="Choisir mon adresse">{selectedAddress?.name}</SelectValue>
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   {addresses.map((a) => (
@@ -173,7 +193,7 @@ export default function Profile() {
           </p>
         )}
 
-        <Button type="submit" disabled={saving} className="h-12 w-full rounded-full text-base font-bold">
+        <Button type="submit" disabled={saving || (profile.role === "admin" && (addressesLoading || addressesError))} className="h-12 w-full rounded-full text-base font-bold">
           {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
           Enregistrer mon profil
         </Button>
