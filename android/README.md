@@ -23,4 +23,4 @@ Créer une clé d’envoi dédiée et conserver une sauvegarde sécurisée. Cré
 
 Essayer sur téléphone : première ouverture, QR, adresse invalide, confirmation de coop, connexion, billets, commentaires, retour, arrêt/reprise, mode hors ligne et changement de coop. Vérifier aussi les liens de confidentialité et de suppression de compte. Les demandes de suppression sont manuelles et nécessitent une procédure effective avec les administrateurs des coops.
 
-Version 1.0.0 compilée et signée : 3 tests Java réussis, lint sans erreur bloquante, signature APK vérifiée et bundle validé avec bundletool. Les essais sur appareil restent à effectuer.
+Version 1.0.1 compilée et signée : 3 tests Java réussis, lint sans erreur bloquante, signature APK vérifiée et bundle validé avec bundletool. Les essais sur appareil restent à effectuer.
