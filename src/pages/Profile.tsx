@@ -58,7 +58,8 @@ export default function Profile() {
       .single();
     setSaving(false);
     if (error) {
-      toast.error("Impossible d'enregistrer le profil.");
+      const addressErrors = ["La coordination doit terminer la liste des logements", "Choisissez un logement autorisé", "Adresse non autorisée", "Les logements doivent être configurés par la coordination"];
+      toast.error(addressErrors.includes(error.message) ? error.message : "Impossible d'enregistrer le profil. Actualisez la page et réessayez.");
       return;
     }
     await refreshProfile();

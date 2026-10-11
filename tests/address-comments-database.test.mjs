@@ -49,3 +49,25 @@ test('Real PostgreSQL: approved units, private capacity and per-user comment rec
   assert.equal((await db.query('select coopfix_admin_addresses() as addresses')).rows[0].addresses[0].unit_count,2);
  } finally { await db.close(); }
 });
+test('Admin can save and reload a legacy building without a unit; members remain constrained', async () => {
+ const db = new PGlite();
+ try {
+  await db.exec("create role anon; create role authenticated; create role service_role; create schema auth; create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb); create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$; grant usage on schema public,auth to anon,authenticated; grant execute on function auth.uid() to anon,authenticated;");
+  const files=(await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort();
+  const admin='00000000-0000-0000-0000-000000000001', address='00000000-0000-0000-0000-000000000010';
+  for(const file of files) {
+   if(file==='20261010000100_address_inventory_comment_reads.sql') {
+    await db.exec(`insert into auth.users values('${admin}','admin@example.test','{}'); update profiles set role='admin' where id='${admin}'; insert into addresses(id,name,unit_count) values('${address}','Legacy building',3);`);
+   }
+   if(file.endsWith('_admin_optional_unit.sql')) {
+    await assert.rejects(db.exec(`update profiles set address_id='${address}' where id='${admin}'`),/terminer la liste/);
+   }
+   await db.exec(await readFile(`supabase/migrations/${file}`,'utf8'));
+  }
+  await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','${admin}',false); update profiles set address_id='${address}',unit=null where id='${admin}';`);
+  assert.equal((await db.query(`select address_id from profiles where id='${admin}'`)).rows[0].address_id,address);
+  await assert.rejects(db.exec(`update profiles set unit='999' where id='${admin}'`),/terminer la liste/);
+  await db.exec('reset role');
+  await assert.rejects(db.exec(`insert into auth.users values('00000000-0000-0000-0000-000000000002','member@example.test','{"address_id":"${address}"}')`),/terminer la liste/);
+ } finally {await db.close();}
+});
