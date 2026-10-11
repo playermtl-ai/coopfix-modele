@@ -5,13 +5,6 @@ import { Loader2, Mail, MapPin, Phone, Save, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { RoleBadge } from "@/components/badges";
 import { PageLoader } from "@/components/PageLoader";
 import { useAuth } from "@/lib/auth";
@@ -35,7 +28,7 @@ export default function Profile() {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [addressId, setAddressId] = useState("");
+  const [addressId, setAddressId] = useState(profile?.address_id ?? "");
   const [unit, setUnit] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -49,7 +42,6 @@ export default function Profile() {
 
   if (!profile) return <PageLoader label="Chargement du profil…" />;
   const memberAddress = addresses.find(address => address.id === profile.address_id);
-  const selectedAddress = addresses.find(address => address.id === addressId);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +53,9 @@ export default function Profile() {
         phone: phone.trim() || null,
         ...(profile.role === "admin" ? { address_id: addressId || null, unit: unit.trim() || null } : {}),
       })
-      .eq("id", profile.id);
+      .eq("id", profile.id)
+      .select("id,address_id,unit")
+      .single();
     setSaving(false);
     if (error) {
       toast.error("Impossible d'enregistrer le profil.");
@@ -153,20 +147,11 @@ export default function Profile() {
         ) : addresses.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1.6fr_1fr]">
             <div className="space-y-1.5">
-              <Label className="font-bold">Mon adresse</Label>
-              <Select value={addressId} onValueChange={value => { setAddressId(value); setUnit(""); }} disabled={profile.role !== "admin"}>
-                <SelectTrigger className="h-12 w-full rounded-xl text-base">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="Choisir mon adresse">{selectedAddress?.name}</SelectValue>
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {addresses.map((a) => (
-                    <SelectItem key={a.id} value={a.id} className="rounded-lg">
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="profile-admin-address" className="font-bold">Mon adresse</Label>
+              <select id="profile-admin-address" value={addressId} onChange={event => { setAddressId(event.target.value); setUnit(""); }} className="h-12 w-full rounded-xl border border-input bg-background px-3 text-base">
+                <option value="">Sans adresse de logement</option>
+                {addresses.map(address => <option key={address.id} value={address.id}>{address.name}</option>)}
+              </select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="profile-unit" className="font-bold">
