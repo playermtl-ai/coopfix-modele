@@ -441,6 +441,10 @@ export default function Login() {
         </div>
 
         <div className="mt-5"><HowItWorks /></div>
+        <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
+          <a className="underline" href="/confidentialite.html">Confidentialité</a>
+          <a className="underline" href="/suppression-compte.html">Suppression de compte</a>
+        </div>
 
         <p className="mt-6 text-center text-xs font-semibold text-muted-foreground">
           CoopFix · Conçu pour les coopératives d'habitation

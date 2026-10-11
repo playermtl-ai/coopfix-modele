@@ -184,6 +184,10 @@ export default function Profile() {
           Enregistrer mon profil
         </Button>
       </form>
+      <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+        <a className="underline" href="/confidentialite.html">Confidentialité</a>
+        <a className="underline" href="/suppression-compte.html">Demander la suppression de mon compte</a>
+      </div>
     </div>
   );
 }
