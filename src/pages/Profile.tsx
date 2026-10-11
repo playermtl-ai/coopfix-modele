@@ -1,3 +1,4 @@
+import { UnitSelect } from "@/components/UnitSelect";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Mail, MapPin, Phone, Save, User } from "lucide-react";
@@ -133,7 +134,7 @@ export default function Profile() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1.6fr_1fr]">
             <div className="space-y-1.5">
               <Label className="font-bold">Mon adresse</Label>
-              <Select value={addressId} onValueChange={setAddressId} disabled={profile.role !== "admin"}>
+              <Select value={addressId} onValueChange={value => { setAddressId(value); setUnit(""); }} disabled={profile.role !== "admin"}>
                 <SelectTrigger className="h-12 w-full rounded-xl text-base">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <SelectValue placeholder="Choisir mon adresse" />
@@ -151,14 +152,7 @@ export default function Profile() {
               <Label htmlFor="profile-unit" className="font-bold">
                 Logement
               </Label>
-              <Input
-                id="profile-unit"
-                disabled={profile.role !== "admin"}
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                className="h-12 rounded-xl text-base"
-                placeholder="n° 4"
-              />
+              <UnitSelect id="profile-unit" address={addresses.find(a => a.id === addressId)} value={unit} onChange={setUnit} disabled={profile.role !== "admin"} />
             </div>
           </div>
         ) : (

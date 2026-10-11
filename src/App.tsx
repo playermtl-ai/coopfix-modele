@@ -33,9 +33,10 @@ function CenteredLoader() {
 }
 
 function RequireAuth() {
-  const { session, loading } = useAuth();
+  const { session, loading, recoveryPending } = useAuth();
   if (loading) return <CenteredLoader />;
   if (!session) return <Navigate to="/login" replace />;
+  if (recoveryPending) return <Navigate to="/nouveau-mot-de-passe" replace />;
   return (
     <AppLayout>
       <Outlet />

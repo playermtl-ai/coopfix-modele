@@ -1,3 +1,4 @@
+import { UnitSelect } from "@/components/UnitSelect";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -282,7 +283,7 @@ export default function Members() {
                 <Label className="font-bold">Adresse</Label>
                 <Select
                   value={form.address_id}
-                  onValueChange={(v) => setForm((f) => ({ ...f, address_id: v }))}
+                  onValueChange={(v) => setForm((f) => ({ ...f, address_id: v, unit: "" }))}
                 >
                   <SelectTrigger className="h-12 w-full rounded-xl text-base">
                     <SelectValue placeholder="Aucune" />
@@ -300,12 +301,7 @@ export default function Members() {
                 <Label htmlFor="member-unit" className="font-bold">
                   Logement
                 </Label>
-                <Input
-                  id="member-unit"
-                  value={form.unit}
-                  onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))}
-                  className="h-12 rounded-xl text-base"
-                />
+                <UnitSelect id="member-unit" address={addresses.find(a => a.id === form.address_id)} value={form.unit} onChange={(unit) => setForm(f => ({ ...f, unit }))} />
               </div>
             </div>
             <DialogFooter className="gap-2">

@@ -23,7 +23,7 @@ export function useAddresses() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("addresses")
-        .select("*")
+        .select("id,name,allowed_units,created_at")
         .order("name", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Address[];

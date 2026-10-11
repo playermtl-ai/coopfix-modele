@@ -14,6 +14,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  recoveryPending: boolean;
+  finishRecovery: () => void;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -24,6 +26,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recoveryPending, setRecoveryPending] = useState(() => localStorage.getItem('coopfix-recovery') === '1' || new URLSearchParams(window.location.hash.slice(1)).get('type') === 'recovery');
+  const finishRecovery = useCallback(() => { localStorage.removeItem('coopfix-recovery'); setRecoveryPending(false); }, []);
+
+  useEffect(() => {
+    const syncRecovery = (event: StorageEvent) => { if (event.key === 'coopfix-recovery') setRecoveryPending(event.newValue === '1'); };
+    window.addEventListener('storage', syncRecovery);
+    return () => window.removeEventListener('storage', syncRecovery);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -34,6 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (_event === 'PASSWORD_RECOVERY') { localStorage.setItem('coopfix-recovery', '1'); setRecoveryPending(true); }
+      if (_event === 'SIGNED_OUT') { localStorage.removeItem('coopfix-recovery'); setRecoveryPending(false); }
       setSession(newSession);
       if (!newSession) {
         setProfile(null);
@@ -81,12 +93,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [userId]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+    if (error) throw error;
     setProfile(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, refreshProfile, signOut }}>
+    <AuthContext.Provider value={{ session, profile, loading, recoveryPending, finishRecovery, refreshProfile, signOut }}>
       {children}
     </AuthContext.Provider>
   );

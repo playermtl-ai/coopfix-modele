@@ -1,3 +1,5 @@
+import { PostalAddressSearch } from "@/components/PostalAddressSearch";
+import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -38,16 +40,14 @@ export default function Addresses() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Address | null>(null);
   const [name, setName] = useState("");
+  const [unitLabels, setUnitLabels] = useState("");
   const [unitCount, setUnitCount] = useState("");
   const [deleting, setDeleting] = useState<AddressWithMeta | null>(null);
 
   const { data: addresses = [], isLoading } = useQuery({
     queryKey: ["addresses", "admin"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("addresses")
-        .select("*, residents:profiles(count), tickets:tickets(count)")
-        .order("name", { ascending: true });
+      const { data, error } = await supabase.rpc("coopfix_admin_addresses");
       if (error) throw error;
       return (data ?? []) as AddressWithMeta[];
     },
@@ -59,13 +59,20 @@ export default function Addresses() {
     setEditing(null);
     setName("");
     setUnitCount("");
+    setUnitLabels("");
   }, [dialogOpen]);
 
   const saveAddress = useMutation({
     mutationFn: async () => {
+      const allowedUnits = [...new Set(unitLabels.split(/[\n,;]+/).map(unit => unit.trim()).filter(Boolean))];
+      const count = unitCount.trim() ? Number(unitCount) : Math.max(allowedUnits.length, 1);
+      if (!Number.isInteger(count) || count < 1 || count > 999 || allowedUnits.length > count) throw new Error("La liste doit respecter le nombre de logements.");
+      if (count > 1 && allowedUnits.length !== count) throw new Error("Inscrivez les vrais numéros de tous les logements avant d’enregistrer.");
+      if (allowedUnits.some(unit => unit.length > 30)) throw new Error("Un numéro de logement ne peut pas dépasser 30 caractères.");
       const payload = {
         name: name.trim(),
-        unit_count: unitCount.trim() ? Number(unitCount) : null,
+        unit_count: count,
+        allowed_units: allowedUnits,
       };
       if (editing) {
         const { error } = await supabase
@@ -83,7 +90,7 @@ export default function Addresses() {
       setDialogOpen(false);
       toast.success(editing ? "Adresse modifiée." : "Adresse ajoutée !");
     },
-    onError: () => toast.error("Impossible d'enregistrer l'adresse."),
+    onError: (error) => toast.error(error.message || "Impossible d’enregistrer l’adresse."),
   });
 
   const deleteAddress = useMutation({
@@ -102,6 +109,7 @@ export default function Addresses() {
   const openEdit = (address: Address) => {
     setEditing(address);
     setName(address.name);
+    setUnitLabels(address.allowed_units.join("\n"));
     setUnitCount(address.unit_count?.toString() ?? "");
     setDialogOpen(true);
   };
@@ -199,6 +207,11 @@ export default function Addresses() {
             }}
             className="space-y-4"
           >
+            <PostalAddressSearch onSelect={(master, unit) => {
+              if (name && name !== master && unitLabels.trim()) { toast.error("Cette adresse appartient à un autre immeuble. Ajoutez-la séparément."); return; }
+              setName(master);
+              if (unit) setUnitLabels(current => [...new Set([...current.split(/[\n,;]+/).map(value => value.trim()).filter(Boolean), unit])].join("\n"));
+            }} />
             <div className="space-y-1.5">
               <Label htmlFor="address-name" className="font-bold">
                 Adresse de l'immeuble
@@ -227,6 +240,11 @@ export default function Addresses() {
                 className="h-12 rounded-xl text-base"
                 placeholder="24"
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="address-unit-labels" className="font-bold">Numéros de logements autorisés</Label>
+              <Textarea id="address-unit-labels" value={unitLabels} onChange={e => setUnitLabels(e.target.value)} placeholder="101, 102, B402" />
+              <p className="text-xs text-muted-foreground">Un numéro par ligne ou séparé par une virgule. Pour une maison sans appartement, laissez vide. Seuls ces logements seront proposés aux membres.</p>
             </div>
             <DialogFooter className="gap-2">
               <Button

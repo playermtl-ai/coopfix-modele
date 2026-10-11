@@ -1,3 +1,4 @@
+import { UnitSelect } from "@/components/UnitSelect";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -43,7 +44,7 @@ function frAuthError(message: string) {
   if (message.includes("at least 6"))
     return "Le mot de passe doit contenir au moins 6 caractères.";
   if (message.includes("Password")) return "Mot de passe trop faible.";
-  if (message.includes("rate limit")) return "Trop de tentatives. Réessayez dans un instant.";
+  if (message.toLowerCase().includes("rate limit")) return "La limite de tentatives ou d’envoi de courriels est atteinte. Attendez avant de réessayer; des demandes répétées ne débloquent pas cette limite.";
   return "Une erreur est survenue. Réessayez.";
 }
 
@@ -93,7 +94,7 @@ function PasswordInput({
 }
 
 export default function Login() {
-  const { session, loading } = useAuth();
+  const { session, loading, recoveryPending } = useAuth();
   const navigate = useNavigate();
   const { data: coopName } = useCoopName();
   const { data: addresses = [] } = useAddresses();
@@ -114,8 +115,8 @@ export default function Login() {
   const [signupMessage, setSignupMessage] = useState("");
 
   useEffect(() => {
-    if (session && !loading) navigate("/tableau-de-bord", { replace: true });
-  }, [session, loading, navigate]);
+    if (session && !loading) navigate(recoveryPending ? "/nouveau-mot-de-passe" : "/tableau-de-bord", { replace: true });
+  }, [session, loading, recoveryPending, navigate]);
 
   if (session) {
     return (
@@ -143,6 +144,11 @@ export default function Login() {
     setSignupMessage("");
     if (password.length < 6) {
       setSignupError("Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+    const selectedAddress = addresses.find(a => a.id === addressId);
+    if (addresses.length && (!selectedAddress || (selectedAddress.allowed_units.length > 0 && !selectedAddress.allowed_units.includes(unit)))) {
+      setSignupError("Choisissez votre adresse et un logement autorisé par la coopérative.");
       return;
     }
     setSigningUp(true);
@@ -383,7 +389,7 @@ export default function Login() {
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1.6fr_1fr]">
                     <div className="space-y-1.5">
                       <Label className="font-bold">Mon adresse</Label>
-                      <Select value={addressId} onValueChange={setAddressId}>
+                      <Select value={addressId} onValueChange={value => { setAddressId(value); setUnit(""); }}>
                         <SelectTrigger className="h-12 w-full rounded-xl text-base">
                           <MapPin className="h-4 w-4 text-muted-foreground" />
                           <SelectValue placeholder="Choisir mon adresse" />
@@ -401,13 +407,7 @@ export default function Login() {
                       <Label htmlFor="signup-unit" className="font-bold">
                         Logement
                       </Label>
-                      <Input
-                        id="signup-unit"
-                        value={unit}
-                        onChange={(e) => setUnit(e.target.value)}
-                        className="h-12 rounded-xl text-base"
-                        placeholder="n° 4"
-                      />
+                      <UnitSelect id="signup-unit" address={addresses.find(a => a.id === addressId)} value={unit} onChange={setUnit} />
                     </div>
                   </div>
                 ) : (

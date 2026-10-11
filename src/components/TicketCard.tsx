@@ -1,3 +1,4 @@
+import { useUnreadComments } from "@/lib/unread-comments";
 import { Link } from "react-router-dom";
 import { ChevronRight, MessageCircle } from "lucide-react";
 import { CategoryChip, PriorityBadge, StatusBadge, categoryMeta } from "@/components/badges";
@@ -8,6 +9,8 @@ import { useAuth } from "@/lib/auth";
 
 export function TicketCard({ ticket }: { ticket: TicketWithMeta }) {
   const { profile } = useAuth();
+  const { data: unread } = useUnreadComments();
+  const isUnread = unread?.has(ticket.id);
   const isAdmin = profile?.role === "admin";
   const meta = categoryMeta(ticket.category);
   const Icon = meta.icon;
@@ -42,7 +45,7 @@ export function TicketCard({ ticket }: { ticket: TicketWithMeta }) {
           <span>{formatDate(ticket.created_at)}</span>
           {commentCount > 0 && (
             <span className="inline-flex items-center gap-1 font-semibold text-primary">
-              <MessageCircle className="h-3.5 w-3.5" />
+              <span className="relative"><MessageCircle className="h-3.5 w-3.5" />{isUnread && <><span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-green-500 ring-2 ring-card" /><span className="sr-only">Nouveaux commentaires non lus</span></>}</span>
               {commentCount}
             </span>
           )}

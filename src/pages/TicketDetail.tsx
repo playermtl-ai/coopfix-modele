@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -110,8 +110,9 @@ export default function TicketDetail() {
     },
   });
 
-  const { data: comments = [], isLoading: commentsLoading } = useQuery({
+  const { data: comments = [], isLoading: commentsLoading, isSuccess: commentsReady } = useQuery({
     queryKey: ["comments", id],
+    refetchInterval: 15000,
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -123,6 +124,16 @@ export default function TicketDetail() {
       return (data ?? []) as CommentWithAuthor[];
     },
   });
+
+  const readThrough = comments[comments.length - 1]?.created_at;
+  useEffect(() => {
+    if (!id || !profile?.id || !ticket || !commentsReady || !readThrough) return;
+    let active = true;
+    void supabase.rpc("coopfix_read_comments", { p_ticket: id, p_through: readThrough }).then(({ error }) => {
+      if (!error && active) void queryClient.invalidateQueries({ queryKey: ["unread-comments", profile.id] });
+    });
+    return () => { active = false; };
+  }, [id, profile?.id, ticket, commentsReady, readThrough, queryClient]);
 
   const updateTicket = useMutation({
     mutationFn: async (patch: Partial<TicketWithMeta>) => {

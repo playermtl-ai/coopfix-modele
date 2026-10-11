@@ -195,3 +195,15 @@ Le réglage SMTP ci-dessus concerne les inscriptions Supabase. À lui seul, il *
 Le manuel simple explique l’inscription et la réception des messages. Les secrets d’envoi restent dans les services serveur; ils ne sont jamais inscrits dans les réglages publics de CoopFix.
 
 Références officielles : [Google — mots de passe d’application](https://support.google.com/accounts/answer/185833?hl=fr), [Google — envoyer depuis une application](https://support.google.com/a/answer/176600?hl=fr), [Supabase — SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
+
+
+## Adresses et logements autorisés
+Dans Administration / Adresses, ajoutez chaque immeuble ou maison. Le nombre de logements est réservé à la coordination. Indiquez les vrais numéros (101, 102, B402), un par ligne ou séparés par des virgules : les membres ne peuvent sélectionner que cette liste. Plusieurs personnes peuvent habiter le même logement. Pour une maison sans appartement, laissez la liste vide et indiquez un logement.
+
+Pour les suggestions de Postes Canada, créez une clé de recherche AddressComplete, limitez-la au domaine de votre application et aux services Find/Retrieve, puis ajoutez VITE_ADDRESSCOMPLETE_KEY aux variables de production Vercel et redéployez. Cette clé de navigateur est publique : ne fournissez jamais de clé de gestion. Le forfait et les recherches facturées se gèrent chez Postes Canada. Chaque adresse choisie ajoute son numéro de logement; vérifiez la liste complète, car les suggestions ne garantissent pas tous les appartements d’un immeuble.
+
+Les liens de récupération utilisent /login, qui doit figurer dans les URL de redirection Supabase autorisées. CoopFix dirige ensuite la personne vers le choix du nouveau mot de passe et exige une nouvelle connexion après le changement. Les limites d’envoi du fournisseur restent actives; un service SMTP de production doit être configuré pour dépasser les quotas du service de test.
+
+Tests PostgreSQL locaux : node --test tests/address-comments-database.test.mjs.
+
+Prérequis du test local uniquement : npm install --prefix .verification --no-package-lock @electric-sql/pglite

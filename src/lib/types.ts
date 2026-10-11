@@ -12,7 +12,8 @@ export type TicketCategory =
 export interface Address {
   id: string;
   name: string;
-  unit_count: number | null;
+  unit_count?: number | null;
+  allowed_units: string[];
   created_at: string;
 }
 
